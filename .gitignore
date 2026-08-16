@@ -1,0 +1,5 @@
+node_modules/
+output/*.wav
+output/*.raw
+stills/
+.DS_Store

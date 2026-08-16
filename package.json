@@ -1,0 +1,16 @@
+{
+  "name": "tech-half-year-canvas-film",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "用 HTML Canvas 直出的 5 分钟纪录片：2026 上半年世界科技重大进展",
+  "scripts": {
+    "render": "node scripts/render-video.mjs",
+    "stills": "node scripts/render-video.mjs --stills",
+    "audio": "node scripts/make-audio.mjs",
+    "serve": "npx --yes serve -l 4173 ."
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "^1.0.6"
+  }
+}
