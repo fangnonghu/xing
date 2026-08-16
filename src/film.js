@@ -35,8 +35,8 @@ const FONT = {
   sc: "NotoSansSC, WenQuanYi Micro Hei, sans-serif",
   scb: "NotoSansSCBold, NotoSansSC, WenQuanYi Micro Hei, sans-serif",
   scm: "NotoSansSCMedium, NotoSansSC, WenQuanYi Micro Hei, sans-serif",
-  en: "NotoSans, NotoSansSC, sans-serif",
-  enb: "NotoSansBold, NotoSans, sans-serif",
+  en: "NotoSans, NotoSansSC, WenQuanYi Micro Hei, sans-serif",
+  enb: "NotoSansBold, NotoSansSCBold, NotoSansSC, WenQuanYi Micro Hei, sans-serif",
 };
 
 let assets = null;
@@ -348,7 +348,8 @@ function drawStat(ctx, value, unit, label, x, y, color, alpha, scale = 1) {
   ctx.translate(x, y);
   ctx.scale(scale, scale);
   ctx.fillStyle = color;
-  font(ctx, 78, FONT.enb);
+  const valueFont = /[\u3400-\u9fff]/.test(String(value) + String(unit)) ? FONT.scb : FONT.enb;
+  font(ctx, 78, valueFont);
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
   ctx.fillText(value, 0, 0);
@@ -480,7 +481,7 @@ function drawBatteries(ctx, t, alpha) {
     ctx.strokeStyle = hexAlpha(C.green, 0.7);
     ctx.lineWidth = 1.6;
     ctx.stroke();
-    ctx.fillStyle = hexAlpha(C.green, 0.18);
+    ctx.fillStyle = hexAlpha(C.green, 0.42);
     const fill = clamp(0.25 + 0.75 * appear(t + i * 0.12, 0.2, 2.4), 0, 1);
     const fh = 132 * fill;
     roundRect(ctx, x + 10, y + 18 + (132 - fh), 100, fh, 8);
@@ -681,7 +682,7 @@ function drawAi(ctx, local, t) {
     );
     drawStat(ctx, "14×", "", "相对标准速度", 160, 820, C.cyan, b1);
     drawStat(ctx, "750", "tok/s", "峰值输出", 560, 820, C.text, b1);
-    drawStat(ctx, "实时", "", "从缩小模型才能快，到前沿模型也要快", 1000, 820, C.violet, b1, 0.72);
+    drawStat(ctx, "实时", "", "前沿模型也要跑在通话里", 1000, 820, C.violet, b1);
   }
 
   const b2 = hold(local, 24.2, 36.8, 0.55);
