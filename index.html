@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/earth-rotation.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Xing · 地球自转 Earth Rotation</title>
+    <meta
+      name="description"
+      content="An interactive showcase for a pure SVG + CSS animated rotating Earth."
+    />
+  </head>
+  <body>
+    <main class="page">
+      <header class="page__header">
+        <p class="eyebrow">Xing · 星</p>
+        <h1>地球自转 <span>Earth Rotation</span></h1>
+        <p class="subtitle">
+          A pure SVG + CSS animation — no images, no canvas. Clouds, meridians,
+          and the surface each drift at their own speed.
+        </p>
+      </header>
+
+      <section class="stage" aria-label="Rotating earth animation">
+        <div class="stage__globe" id="globe">
+          <object
+            id="earth"
+            type="image/svg+xml"
+            data="/earth-rotation.svg"
+            aria-label="Animated rotating earth"
+          ></object>
+        </div>
+
+        <div class="controls" role="group" aria-label="Animation controls">
+          <label class="control">
+            <span>Speed</span>
+            <input
+              id="speed"
+              type="range"
+              min="0.25"
+              max="3"
+              step="0.05"
+              value="1"
+            />
+            <output id="speedValue">1.00×</output>
+          </label>
+          <button id="toggle" class="btn" type="button" aria-pressed="true">
+            Pause
+          </button>
+        </div>
+      </section>
+
+      <footer class="page__footer">
+        <span id="status" class="status">Loading animation…</span>
+      </footer>
+    </main>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
