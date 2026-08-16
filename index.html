@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>2026 科技半年报 · Canvas 直出</title>
+    <style>
+      @font-face {
+        font-family: NotoSansSC;
+        src: url("./fonts/NotoSansSC-400.ttf") format("truetype");
+        font-weight: 400;
+      }
+      @font-face {
+        font-family: NotoSansSCMedium;
+        src: url("./fonts/NotoSansSC-500.ttf") format("truetype");
+        font-weight: 500;
+      }
+      @font-face {
+        font-family: NotoSansSCBold;
+        src: url("./fonts/NotoSansSC-700.ttf") format("truetype");
+        font-weight: 700;
+      }
+      @font-face {
+        font-family: NotoSans;
+        src: url("./fonts/NotoSans-400.ttf") format("truetype");
+        font-weight: 400;
+      }
+      @font-face {
+        font-family: NotoSansBold;
+        src: url("./fonts/NotoSans-700.ttf") format("truetype");
+        font-weight: 700;
+      }
+      :root {
+        color-scheme: dark;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        background: #05070d;
+        color: #e8eef8;
+        font-family: NotoSansSC, "WenQuanYi Micro Hei", sans-serif;
+      }
+      body {
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        min-height: 100vh;
+      }
+      header,
+      footer {
+        padding: 18px 28px;
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: center;
+      }
+      header h1 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+      }
+      header p,
+      footer p {
+        margin: 0;
+        color: #8d97ab;
+        font-size: 13px;
+      }
+      main {
+        display: grid;
+        place-items: center;
+        padding: 0 24px 12px;
+      }
+      .stage {
+        width: min(100%, 1280px);
+        aspect-ratio: 16 / 9;
+        background: #000;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+      }
+      canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      .dock {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        padding: 0 28px 22px;
+      }
+      button,
+      select {
+        appearance: none;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: #121826;
+        color: #e8eef8;
+        border-radius: 999px;
+        padding: 8px 16px;
+        font: inherit;
+        cursor: pointer;
+      }
+      button.primary {
+        background: #4ef0d5;
+        color: #06201b;
+        border-color: transparent;
+        font-weight: 700;
+      }
+      input[type="range"] {
+        flex: 1;
+        min-width: 180px;
+      }
+      .chapters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .chapters button {
+        font-size: 12px;
+        padding: 6px 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div>
+        <h1>2026 科技半年报</h1>
+        <p>HTML Canvas 逐帧直出 · 5:00 · 1920×1080</p>
+      </div>
+      <p>二月至八月公开报道综述</p>
+    </header>
+    <main>
+      <div class="stage">
+        <canvas id="film" width="1920" height="1080"></canvas>
+      </div>
+    </main>
+    <div class="dock">
+      <button class="primary" id="play">播放</button>
+      <button id="pause">暂停</button>
+      <span id="clock">00:00 / 05:00</span>
+      <input id="seek" type="range" min="0" max="3000" value="0" />
+      <select id="rate">
+        <option value="1">1×</option>
+        <option value="1.5">1.5×</option>
+        <option value="2">2×</option>
+      </select>
+      <button id="export">浏览器导出 WebM</button>
+    </div>
+    <footer>
+      <div class="chapters" id="chapters"></div>
+      <p>完整成片请运行 <code>npm run render</code></p>
+    </footer>
+    <script type="module">
+      import { drawFrame, DURATION, CHAPTERS } from "./src/film.js";
+
+      const canvas = document.getElementById("film");
+      const ctx = canvas.getContext("2d", { alpha: false });
+      const playBtn = document.getElementById("play");
+      const pauseBtn = document.getElementById("pause");
+      const clock = document.getElementById("clock");
+      const seek = document.getElementById("seek");
+      const rate = document.getElementById("rate");
+      const chapters = document.getElementById("chapters");
+
+      let time = 0;
+      let playing = false;
+      let last = 0;
+      let recorder = null;
+      let chunks = [];
+
+      function fmt(t) {
+        const m = Math.floor(t / 60);
+        const s = Math.floor(t % 60);
+        return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+      }
+
+      function paint() {
+        drawFrame(ctx, time);
+        clock.textContent = `${fmt(time)} / 05:00`;
+        seek.value = String(Math.round(time * 10));
+      }
+
+      function tick(now) {
+        if (playing) {
+          const dt = Math.min(0.08, (now - last) / 1000) * Number(rate.value);
+          time = Math.min(DURATION, time + dt);
+          if (time >= DURATION) {
+            playing = false;
+            if (recorder && recorder.state === "recording") recorder.stop();
+          }
+          paint();
+        }
+        last = now;
+        requestAnimationFrame(tick);
+      }
+
+      playBtn.onclick = () => {
+        if (time >= DURATION) time = 0;
+        playing = true;
+      };
+      pauseBtn.onclick = () => {
+        playing = false;
+      };
+      seek.oninput = () => {
+        time = Number(seek.value) / 10;
+        paint();
+      };
+
+      CHAPTERS.forEach((c) => {
+        const b = document.createElement("button");
+        b.textContent = c.name;
+        b.onclick = () => {
+          time = c.start + 0.05;
+          paint();
+        };
+        chapters.appendChild(b);
+      });
+
+      document.getElementById("export").onclick = async () => {
+        if (recorder) return;
+        time = 0;
+        playing = true;
+        rate.value = "1";
+        const stream = canvas.captureStream(24);
+        const mime = MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
+          ? "video/webm;codecs=vp9"
+          : "video/webm";
+        recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 8_000_000 });
+        chunks = [];
+        recorder.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+        recorder.onstop = () => {
+          const blob = new Blob(chunks, { type: mime });
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = "tech-2026-h1.webm";
+          a.click();
+          recorder = null;
+        };
+        recorder.start(1000);
+      };
+
+      await Promise.all([...document.fonts].map((f) => f.load().catch(() => {})));
+      paint();
+      requestAnimationFrame((now) => {
+        last = now;
+        requestAnimationFrame(tick);
+      });
+    </script>
+  </body>
+</html>
